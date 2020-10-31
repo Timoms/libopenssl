@@ -1,6 +1,7 @@
-# OpenSSL NodeJS
+# OpenSSL NodeJS (LibOpenSSL)
 
 This package provides a simple interface to the [OpenSSL](https://www.openssl.org/) binary.  
+It comes pre-loaded with the openssl binarys for Windows (later also Linux).  
 IO operations are handled with a path config - and can be overwritten by
 ([Buffor](https://nodejs.org/dist/latest-v10.x/docs/api/buffer.html)) streams.
 
@@ -24,7 +25,7 @@ const openssl = require("libopenssl");
 sslconfig = []; // object
 sslconfig["params"] = "genrsa -out certs/domain.key 1024"; // string
 sslconfig["params"] = ["genrsa", "-out", "certs/domain.key", "1024"]; // alternative: object
-sslconfig["path"] = "C:/Users/heckel.timo/Temporary/OpenSSL/"; // string
+sslconfig["path"] = "C:/Users/OSSL/Temporary/OpenSSL/"; // string
 sslconfig["beautify"] = true; // boolean
 ```
 
