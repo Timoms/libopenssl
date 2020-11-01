@@ -22,7 +22,7 @@ const openssl = require("libopenssl");
 ### Next, we need to create the config object.
 
 ```javascript
-sslconfig = []; // object
+let sslconfig = []; // object
 sslconfig["params"] = "genrsa -out certs/domain.key 1024"; // string
 sslconfig["params"] = ["genrsa", "-out", "certs/domain.key", "1024"]; // alternative: object
 sslconfig["path"] = "C:/Users/OSSL/Temporary/OpenSSL/"; // string
