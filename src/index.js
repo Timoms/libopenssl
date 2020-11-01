@@ -123,12 +123,10 @@ module.exports.run = function openssl(config, callback) {
   const openSSLProcess = spawn(__dirname + osslpath, parameters);
 
   openSSLProcess.stdout.on("data", (data) => {
-    //console.log("got data: ", data.toString());
     stdout.push(data);
   });
 
   openSSLProcess.stderr.on("data", (data) => {
-    //console.log("got error: ", data.toString());
     stderr.push(data);
   });
 
@@ -141,9 +139,8 @@ module.exports.run = function openssl(config, callback) {
       returnValue["processError"] = stderr.toString();
       returnValue["processOutput"] = stdout.toString();
     }
-
     returnValue["processExitCode"] = code;
-    returnValue["hasError"] = stderr.toString() !== "";
+    returnValue["hasError"] = code !== 0;
     callback.call(null, returnValue);
   });
 
