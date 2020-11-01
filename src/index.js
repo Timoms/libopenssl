@@ -76,11 +76,15 @@ module.exports.run = function openssl(config, callback) {
   for (let i = 0; i <= parameters.length - 1; i++) {
     if (checkBufferObject(parameters[i])) {
       if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
+        try {
+          fs.mkdirSync(dir);
+        } catch (error) {
+          throw new Error(error);
+        }
       }
 
       const filename = dir + parameters[i].name;
-      console.log("out: ", filename);
+      // console.log("out: ", filename);
       fs.writeFileSync(filename, parameters[i].buffer, (err) => {
         if (err) {
           throw new Error(err);
@@ -99,8 +103,11 @@ module.exports.run = function openssl(config, callback) {
       fullPath = parameters[i + 1];
     }
   }
-
-  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  try {
+    fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  } catch (error) {
+    throw new Error(error);
+  }
 
   let osslpath = "";
   switch (operatingsystem) {
@@ -112,6 +119,7 @@ module.exports.run = function openssl(config, callback) {
     case "Darwin":
       throw new Error("Darwin is currently not supported.");
   }
+
   const openSSLProcess = spawn(__dirname + osslpath, parameters);
 
   openSSLProcess.stdout.on("data", (data) => {
