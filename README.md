@@ -42,6 +42,8 @@ openssl.run(sslconfig, function (data) {
 
 The Library will call this function with all return values of the process:
 
+> Important: "processError" is not directly a sign of an error, consider hasError as the primary detection. Check [this Article](https://unix.stackexchange.com/questions/131394/why-does-openssl-print-to-stderr-for-a-successful-command) for more information about how openssl handles `stderr`.
+
 ```js
 [
   (processError: ""),
