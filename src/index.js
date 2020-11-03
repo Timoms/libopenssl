@@ -48,8 +48,15 @@ module.exports.run = function openssl(config, callback) {
   const stderr = [];
 
   let parameters = config["params"];
-  const dir = config["path"] || "openssl/";
-  const beautify = config["beautify"] || true;
+
+  const dir =
+    typeof config["path"] !== "undefined" ? config["path"] : "openssl/";
+
+  const beautify =
+    typeof config["beautify"] !== "undefined" ? config["beautify"] : true;
+
+  const appendSampleConfig =
+    typeof config["appendConf"] !== "undefined" ? config["appendConf"] : true;
 
   if (!isFunction(callback)) {
     throw new Error(
@@ -110,9 +117,11 @@ module.exports.run = function openssl(config, callback) {
   }
 
   let osslpath = "";
+  let osslexecutable = "";
   switch (operatingsystem) {
     case "Windows_NT":
-      osslpath = "\\bin\\win\\openssl.exe";
+      osslpath = "\\bin\\win\\";
+      osslexecutable = "openssl.exe";
       break;
     case "Linux":
       throw new Error("Linux is currently not supported.");
@@ -120,7 +129,14 @@ module.exports.run = function openssl(config, callback) {
       throw new Error("Darwin is currently not supported.");
   }
 
-  const openSSLProcess = spawn(__dirname + osslpath, parameters);
+  const openSSLProcess = spawn(
+    __dirname + osslpath + osslexecutable,
+    parameters
+  );
+  if (appendSampleConfig) {
+    parameters.unshift(__dirname + osslpath + "openssl.cnf ");
+    parameters.unshift("-config");
+  }
 
   openSSLProcess.stdout.on("data", (data) => {
     stdout.push(data);

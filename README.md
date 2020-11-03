@@ -22,11 +22,18 @@ const openssl = require("libopenssl");
 ### Next, we need to create the config object.
 
 ```javascript
-let sslconfig = []; // object
-sslconfig["params"] = "genrsa -out certs/domain.key 1024"; // string
-sslconfig["params"] = ["genrsa", "-out", "certs/domain.key", "1024"]; // alternative: object
-sslconfig["path"] = "C:/Users/OSSL/Temporary/OpenSSL/"; // string
-sslconfig["beautify"] = true; // boolean
+// empty object for our config values
+let sslconfig = [];
+// string vesion of our command parameters
+sslconfig["params"] = "genrsa -out certs/domain.key 1024";
+// alternative: object version
+sslconfig["params"] = ["genrsa", "-out", "certs/domain.key", "1024"];
+// string, output of IO operations, default 'openssl/'
+sslconfig["path"] = "C:/Users/OSSL/Temporary/OpenSSL/";
+// boolean, replaces EOL linebreaks, default true
+sslconfig["beautify"] = true;
+// boolean, add empty default config for the command to prevent error, default true
+sslconfig["appendConf"] = true;
 ```
 
 ### We can now execute the openssl binary with the config object created earlier:
@@ -48,7 +55,7 @@ The Library will call this function with all return values of the process:
 [
   (processError: ""),
   (processOutput: "Generating RSA private key, 1024 bit long modulus (2 primes)"),
-  (processExitCode: 0),
+  (processExitCode: 0), // <- That's the important one!
   (hasError: false),
 ];
 ```
