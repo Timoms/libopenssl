@@ -35,6 +35,11 @@ const checkCommandForIO = (element) =>
   element.includes("-signkey") ||
   element.includes("-key");
 
+const checkCommandForIOExceptIN = (element) =>
+  element.includes("-out") ||
+  element.includes("-keyout") ||
+  element.includes("-signkey");
+
 const checkDataTypeCompatibility = (params) => {
   const allowedParamsDataTypes = ["string", "object"];
   return allowedParamsDataTypes.includes(typeof params);
@@ -110,10 +115,13 @@ module.exports.run = function openssl(config, callback) {
       fullPath = parameters[i + 1];
     }
   }
-  try {
-    fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  } catch (error) {
-    throw new Error(error);
+
+  if (checkCommandForIOExceptIN) {
+    try {
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   let osslpath = "";
