@@ -11,7 +11,6 @@
 /** jshint {inline configuration here} */
 /* eslint-disable no-plusplus */
 /* eslint-disable max-len */
-/* eslint-disable no-console */
 /* eslint indent: "error" */
 const fs = require("fs");
 const { spawn } = require("child_process");
@@ -96,7 +95,6 @@ module.exports.run = function openssl(config, callback) {
       }
 
       const filename = dir + parameters[i].name;
-      // console.log("out: ", filename);
       fs.writeFileSync(filename, parameters[i].buffer, (err) => {
         if (err) {
           throw new Error(err);
@@ -141,8 +139,6 @@ module.exports.run = function openssl(config, callback) {
     parameters.push("-config");
     parameters.push(__dirname + osslpath + "openssl.cnf");
   }
-  console.log("append: ", appendSampleConfig);
-  console.log("params: ", parameters);
   const openSSLProcess = spawn(
     __dirname + osslpath + osslexecutable,
     parameters

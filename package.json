@@ -1,6 +1,6 @@
 {
   "name": "libopenssl",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "OpenSSL implementation for NodeJS",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
