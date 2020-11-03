@@ -116,7 +116,7 @@ module.exports.run = function openssl(config, callback) {
     }
   }
 
-  if (checkCommandForIOExceptIN) {
+  if (checkCommandForIO) {
     try {
       fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     } catch (error) {
@@ -137,14 +137,16 @@ module.exports.run = function openssl(config, callback) {
       throw new Error("Darwin is currently not supported.");
   }
 
+  if (appendSampleConfig) {
+    parameters.push("-config");
+    parameters.push(__dirname + osslpath + "openssl.cnf");
+  }
+  console.log("append: ", appendSampleConfig);
+  console.log("params: ", parameters);
   const openSSLProcess = spawn(
     __dirname + osslpath + osslexecutable,
     parameters
   );
-  if (appendSampleConfig) {
-    parameters.unshift(__dirname + osslpath + "openssl.cnf ");
-    parameters.unshift("-config");
-  }
 
   openSSLProcess.stdout.on("data", (data) => {
     stdout.push(data);
