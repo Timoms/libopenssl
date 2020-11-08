@@ -13,7 +13,7 @@
 /* eslint-disable max-len */
 /* eslint indent: "error" */
 const fs = require("fs");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 const path = require("path");
 const os = require("os"); // Comes with node.js
 const operatingsystem = os.type();
@@ -44,23 +44,33 @@ const checkDataTypeCompatibility = (params) => {
   return allowedParamsDataTypes.includes(typeof params);
 };
 
+let debug = false;
+
+function log(text) {
+  if (debug) console.log("LibOpenSSL: ", text);
+}
+
 /*=================================================
 Module Exports
 =================================================*/
 module.exports.run = function openssl(config, callback) {
-  const stdout = [];
-  const stderr = [];
-
   let parameters = config["params"];
 
   const dir =
     typeof config["path"] !== "undefined" ? config["path"] : "openssl/";
+  const peferSync =
+    typeof config["peferSync"] !== "undefined" ? config["peferSync"] : false;
 
   const beautify =
     typeof config["beautify"] !== "undefined" ? config["beautify"] : true;
 
   const appendSampleConfig =
     typeof config["appendConf"] !== "undefined" ? config["appendConf"] : true;
+  const useShell =
+    typeof config["useShell"] !== "undefined" ? config["useShell"] : true;
+
+  debug =
+    typeof config["debugMode"] !== "undefined" ? config["debugMode"] : false;
 
   if (!isFunction(callback)) {
     throw new Error(
@@ -69,6 +79,7 @@ module.exports.run = function openssl(config, callback) {
   }
 
   if (!checkDataTypeCompatibility(parameters)) {
+    log(`Parameters must be string or an object, but got ${typeof parameters}`);
     throw new Error(
       `Parameters must be string or an object, but got ${typeof parameters}`
     );
@@ -78,8 +89,10 @@ module.exports.run = function openssl(config, callback) {
     parameters = parameters.split(" ");
   }
 
-  if (!checkIfParamsArrayIsEmpty(parameters))
+  if (!checkIfParamsArrayIsEmpty(parameters)) {
+    log("Array of params must contain at least one parameter");
     throw new Error("Array of params must contain at least one parameter");
+  }
 
   if (parameters[0] === "openssl") parameters.shift();
 
@@ -88,8 +101,10 @@ module.exports.run = function openssl(config, callback) {
     if (checkBufferObject(parameters[i])) {
       if (!fs.existsSync(dir)) {
         try {
+          log("Trying to create directory: " + dir);
           fs.mkdirSync(dir);
         } catch (error) {
+          log("Error on directory create: " + error);
           throw new Error(error);
         }
       }
@@ -97,6 +112,7 @@ module.exports.run = function openssl(config, callback) {
       const filename = dir + parameters[i].name;
       fs.writeFileSync(filename, parameters[i].buffer, (err) => {
         if (err) {
+          log("Error on creating file from buffer");
           throw new Error(err);
         }
       });
@@ -115,6 +131,7 @@ module.exports.run = function openssl(config, callback) {
   }
 
   if (checkCommandForIO) {
+    log("IO detected, enabling now.");
     try {
       fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     } catch (error) {
@@ -136,35 +153,111 @@ module.exports.run = function openssl(config, callback) {
   }
 
   if (appendSampleConfig) {
+    log("Appending sample config to the process.");
     parameters.push("-config");
     parameters.push(__dirname + osslpath + "openssl.cnf");
   }
-  const openSSLProcess = spawn(
-    __dirname + osslpath + osslexecutable,
-    parameters
-  );
 
-  openSSLProcess.stdout.on("data", (data) => {
-    stdout.push(data);
-  });
+  if (peferSync) {
+    const stdout = [];
+    const stderr = [];
 
-  openSSLProcess.stderr.on("data", (data) => {
-    stderr.push(data);
-  });
+    //child_process.spawn(command[, args][, options])
+    const defaults = {
+      cwd: undefined,
+      env: process.env,
+      shell: useShell,
+      windowsHide: false,
+    };
 
-  returnValue = [];
-  openSSLProcess.on("close", (code) => {
+    const openSSLProcess = spawn(
+      __dirname + osslpath + osslexecutable,
+      parameters,
+      defaults
+    );
+
+    openSSLProcess.stdout.on("data", (data) => {
+      stdout.push(data);
+    });
+
+    openSSLProcess.stderr.on("data", (data) => {
+      stderr.push(data);
+    });
+
+    openSSLProcess.on("error", (err) => {
+      stderr.push(err);
+      log("SSLProcess encountered an error: " + err);
+    });
+
+    returnValue = [];
+    preventExex = false;
+
+    openSSLProcess.on("exit", (code) => {
+      if (!preventExex) {
+        preventExex = true;
+        log("Process action: exit");
+        if (beautify) {
+          returnValue["processError"] = stderr.toString().replace("\r\n", "");
+          returnValue["processOutput"] = stdout.toString().replace("\r\n", "");
+        } else {
+          returnValue["processError"] = stderr.toString();
+          returnValue["processOutput"] = stdout.toString();
+        }
+        returnValue["processExitCode"] = code;
+        returnValue["processEnd"] = "exited";
+        returnValue["hasError"] = code !== 0;
+        callback.call(null, returnValue);
+      }
+    });
+
+    openSSLProcess.on("close", (code) => {
+      if (!preventExex) {
+        preventExex = true;
+        log("Process action: close");
+        if (beautify) {
+          returnValue["processError"] = stderr.toString().replace("\r\n", "");
+          returnValue["processOutput"] = stdout.toString().replace("\r\n", "");
+        } else {
+          returnValue["processError"] = stderr.toString();
+          returnValue["processOutput"] = stdout.toString();
+        }
+        returnValue["processExitCode"] = code;
+        returnValue["processEnd"] = "closed";
+        returnValue["hasError"] = code !== 0;
+        callback.call(null, returnValue);
+      }
+    });
+    return openSSLProcess;
+  } else {
+    returnValue = [];
+    const defaults = {
+      cwd: undefined,
+      env: process.env,
+      shell: useShell,
+      windowsHide: false,
+    };
+
+    const openSSLProcess = spawnSync(
+      __dirname + osslpath + osslexecutable,
+      parameters,
+      defaults
+    );
+
     if (beautify) {
-      returnValue["processError"] = stderr.toString().replace("\r\n", "");
-      returnValue["processOutput"] = stdout.toString().replace("\r\n", "");
+      returnValue["processError"] = openSSLProcess.stderr
+        .toString()
+        .replace("\r\n", "");
+      returnValue["processOutput"] = openSSLProcess.stdout
+        .toString()
+        .replace("\r\n", "");
     } else {
-      returnValue["processError"] = stderr.toString();
-      returnValue["processOutput"] = stdout.toString();
+      returnValue["processError"] = openSSLProcess.stderr.toString();
+      returnValue["processOutput"] = openSSLProcess.stdout.toString();
     }
-    returnValue["processExitCode"] = code;
-    returnValue["hasError"] = code !== 0;
+    returnValue["processExitCode"] = openSSLProcess.status;
+    returnValue["processEnd"] = openSSLProcess.signal;
+    returnValue["hasError"] = openSSLProcess.status !== 0;
     callback.call(null, returnValue);
-  });
-
-  return openSSLProcess;
+    return openSSLProcess;
+  }
 };

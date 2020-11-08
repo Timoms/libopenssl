@@ -34,6 +34,12 @@ sslconfig["path"] = "C:/Users/OSSL/Temporary/OpenSSL/";
 sslconfig["beautify"] = true;
 // boolean, add empty default config for the command to prevent error, default true
 sslconfig["appendConf"] = true;
+// boolean, shows additional output on the console, default false
+sslconfig["debugMode"] = true;
+// boolean, uses the default windows or linux shell, default false
+sslconfig["useShell"] = false;
+// boolean, executes openssl in sync - useful for short living tasks, default false
+sslconfig["preferSync"] = false;
 ```
 
 ### We can now execute the openssl binary with the config object created earlier:
@@ -56,6 +62,7 @@ The Library will call this function with all return values of the process:
   (processError: ""),
   (processOutput: "Generating RSA private key, 1024 bit long modulus (2 primes)"),
   (processExitCode: 0), // <- That's the important one!
+  (processEnd: "closed"), // <- Shows how the process exited
   (hasError: false),
 ];
 ```
