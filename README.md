@@ -3,7 +3,8 @@
 This package provides a simple interface to the [OpenSSL](https://www.openssl.org/) binary.  
 It comes pre-loaded with the openssl binarys for Windows (later also Linux).  
 IO operations are handled with a path config - and can be overwritten by
-([Buffor](https://nodejs.org/dist/latest-v10.x/docs/api/buffer.html)) streams.
+([Buffer](https://nodejs.org/dist/latest-v10.x/docs/api/buffer.html)) streams.  
+See [This Wikipage](https://github.com/Timoms/libopenssl/wiki/Buffer-Stream) for more informations.
 
 # Installation &amp; Usage
 
